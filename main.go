@@ -11,12 +11,14 @@ import (
 	rpio "github.com/stianeikeland/go-rpio"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
-	_ "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 )
 
 //pins correspond to GPIO pin #s and not physical pin #s
 const pin = rpio.Pin(2)
+
+var thermometer metric.Meter
 
 func main() {
 	//setup gin gonic with otel middleware
@@ -44,6 +46,9 @@ func main() {
 	if collectErr := mp.Start(ctx); collectErr != nil {
 		log.Fatal(collectErr)
 	}
+
+	//create meter from meter provider (set to global variable)
+	thermometer = global.Meter("thermometer")
 
 	defer func() {
 		if stopErr := mp.Stop(ctx); stopErr != nil {
@@ -75,10 +80,13 @@ func readTemperature() {
 		//Temp in °C = [(Vout in mV) - 500] / 10
 		//((_pin.read()*3.3)-0.500)*100.0;
 		// tempF=(9.0 * myTMP36.read())/5.0 + 32.0;
+		//create metric for temp reads
+		statCtr, _ := thermometer.NewInt64Counter("thermostat.temp", metric.WithDescription("logs temperature in F"))
 		pin.Input()          // Input mode
 		vstate := pin.Read() // Read state from pin (High / Low)
 		read := ((float64(vstate) * 3.3) - 0.5) * 100.0
 		tempF := (9.0*read)/5.0 + 32.0
+		statCtr.Measurement(int64(tempF))
 		fmt.Sprintf("TempF: %f", tempF)
 		time.Sleep(1 * time.Second)
 	}
