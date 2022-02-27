@@ -75,6 +75,9 @@ func main() {
 }
 
 func readTemperature() {
+	pin := rpio.Pin(2)
+	pin.Input() // Input mode
+
 	for {
 		// Temperature sensor input voltage relates to actual temp
 		//Temp in °C = [(Vout in mV) - 500] / 10
@@ -82,8 +85,6 @@ func readTemperature() {
 		// tempF=(9.0 * myTMP36.read())/5.0 + 32.0;
 		//create metric for temp reads
 		statCtr, _ := thermometer.NewInt64Counter("thermostat.temp", metric.WithDescription("logs temperature in F"))
-		pin := rpio.Pin(int(2))
-		pin.Input()           // Input mode
 		voltage := pin.Read() // Read state from pin (High / Low)
 		read := ((float64(voltage) * 3.3) - 0.5) * 100.0
 		tempF := (9.0*read)/5.0 + 32.0
