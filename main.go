@@ -16,7 +16,7 @@ import (
 )
 
 //pins correspond to GPIO pin #s and not physical pin #s
-const pin = rpio.Pin(2)
+//const pin = rpio.Pin(2)
 
 var thermometer metric.Meter
 
@@ -82,6 +82,7 @@ func readTemperature() {
 		// tempF=(9.0 * myTMP36.read())/5.0 + 32.0;
 		//create metric for temp reads
 		statCtr, _ := thermometer.NewInt64Counter("thermostat.temp", metric.WithDescription("logs temperature in F"))
+		pin := rpio.Pin(2)
 		pin.Input()          // Input mode
 		vstate := pin.Read() // Read state from pin (High / Low)
 		read := ((float64(vstate) * 3.3) - 0.5) * 100.0
