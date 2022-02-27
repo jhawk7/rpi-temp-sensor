@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
-	_ "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 	"github.com/jhawk7/rpi-thermometer/pkg/opentel"
 	log "github.com/sirupsen/logrus"
 	rpio "github.com/stianeikeland/go-rpio/v4"
-	_ "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
@@ -19,6 +20,7 @@ import (
 //const pin = rpio.Pin(2)
 
 var thermometer metric.Meter
+var wg sync.WaitGroup
 
 func main() {
 	//setup gin gonic with otel middleware
@@ -58,13 +60,17 @@ func main() {
 		if shutdownErr := tp.Shutdown(ctx); shutdownErr != nil {
 			log.Fatal(shutdownErr)
 		}
+
+		//close rpio pin addresses
+		rpio.Close()
 	}()
 
 	//create meter from meter provider (set to global variable)
 	//ds_meter = global.Meter("deathstar_meter")
+	//wg.Add(1)
 	go readTemperature()
 
-	/* r := gin.New()
+	r := gin.New()
 	r.Use(otelgin.Middleware("rpi-thermostat"))
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -72,6 +78,7 @@ func main() {
 		})
 	})
 	r.Run() // listen and serve on 0.0.0.0:8080 */
+	//wg.Wait()
 }
 
 func readTemperature() {
