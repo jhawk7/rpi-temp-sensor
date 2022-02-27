@@ -6,7 +6,7 @@ import (
 	"time"
 
 	_ "github.com/gin-gonic/gin"
-	"github.com/jhawk7/rpi-thermostat/pkg/opentel"
+	"github.com/jhawk7/rpi-thermometer/pkg/opentel"
 	log "github.com/sirupsen/logrus"
 	rpio "github.com/stianeikeland/go-rpio/v4"
 	_ "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
