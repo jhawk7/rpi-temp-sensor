@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	_ "github.com/gin-gonic/gin"
 	"github.com/jhawk7/rpi-thermostat/pkg/opentel"
 	log "github.com/sirupsen/logrus"
 	rpio "github.com/stianeikeland/go-rpio/v4"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	_ "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
@@ -64,14 +64,14 @@ func main() {
 	//ds_meter = global.Meter("deathstar_meter")
 	go readTemperature()
 
-	r := gin.New()
+	/* r := gin.New()
 	r.Use(otelgin.Middleware("rpi-thermostat"))
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
 		})
 	})
-	r.Run() // listen and serve on 0.0.0.0:8080
+	r.Run() // listen and serve on 0.0.0.0:8080 */
 }
 
 func readTemperature() {
