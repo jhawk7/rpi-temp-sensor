@@ -22,8 +22,8 @@ const serviceName string = "rpi-thermostat"
 func InitTraceProvider() (tp *sdktrace.TracerProvider, tpErr error) {
 	//configure grpc exporter
 	exp_url := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-	//exports to localhost:4317 by defualt
-	exporter, expErr := otlptracegrpc.New(context.Background(), exp_url)
+	// exports to localhost:4317 by defualt
+	exporter, expErr := otlptracegrpc.New(context.Background(), otlptracegrpc.WithEndpoint(exp_url))
 	if expErr != nil {
 		//fmt.Errorf("error initializing exporter [error: %v]", expErr)
 		tpErr = expErr
