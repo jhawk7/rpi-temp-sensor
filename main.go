@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jhawk7/rpi-thermostat/pkg/opentel"
 	log "github.com/sirupsen/logrus"
-	rpio "github.com/stianeikeland/go-rpio"
+	rpio "github.com/stianeikeland/go-rpio/v4"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
@@ -83,9 +83,9 @@ func readTemperature() {
 		//create metric for temp reads
 		statCtr, _ := thermometer.NewInt64Counter("thermostat.temp", metric.WithDescription("logs temperature in F"))
 		pin := rpio.Pin(2)
-		pin.Input()          // Input mode
-		vstate := pin.Read() // Read state from pin (High / Low)
-		read := ((float64(vstate) * 3.3) - 0.5) * 100.0
+		pin.Input()           // Input mode
+		voltage := pin.Read() // Read state from pin (High / Low)
+		read := ((float64(voltage) * 3.3) - 0.5) * 100.0
 		tempF := (9.0*read)/5.0 + 32.0
 		statCtr.Measurement(int64(tempF))
 		fmt.Sprintf("TempF: %f", tempF)
