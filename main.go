@@ -28,16 +28,19 @@ func main() {
 	//start metric collection
 	ctx := context.Background()
 	if collectErr := config.MeterProvider.Start(ctx); collectErr != nil {
-		log.Fatal(collectErr)
+		err := fmt.Errorf("failed to start metric collector; emessage: %v", collectErr)
+		common.ErrorHandler(err, true)
 	}
 
 	defer func() {
 		if stopErr := config.MeterProvider.Stop(ctx); stopErr != nil {
-			log.Fatal(stopErr)
+			err := fmt.Errorf("failed to stop metric collector; emessage: %v", stopErr)
+			common.ErrorHandler(err, true)
 		}
 
 		if shutdownErr := config.TraceProvider.Shutdown(ctx); shutdownErr != nil {
-			log.Fatal(shutdownErr)
+			err := fmt.Errorf("failed to shutdown trace provider; emessage: %v", shutdownErr)
+			common.ErrorHandler(err, true)
 		}
 
 		//close rpio pin addresses
@@ -61,13 +64,15 @@ func main() {
 func readTemperature() {
 	//Open memory range for GPIO access in /dev/mem
 	gpioErr := rpio.Open()
-	log.Fatal(gpioErr)
+	err := fmt.Errorf("failed to open mem range for GPIO access; emessage: %v", gpioErr)
+	common.ErrorHandler(err, true)
 
 	pin := rpio.Pin(2)
 	pin.Input() // Input mode
 
 	//create meter from global mp
 	thermometer := global.Meter("rpi-thermometer")
+	log.Info("starting temp reading")
 
 	for {
 		/*Temperature sensor input voltage relates to actual temp
