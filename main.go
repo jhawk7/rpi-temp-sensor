@@ -90,8 +90,8 @@ func readTemperature() {
 		//create metric for temp reads
 		tempCtr, _ := thermometer.NewInt64Counter("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
 		read := pin.Read() // Read state from pin (High / Low) in miliVolts
-		voltage := float64(read) * (3.3 / 1024.0)
-		tempC := (voltage - 0.5) * 100.0
+		voltage := float64(read) * (3300.0 / 1024.0)
+		tempC := (voltage - 500.0) / 10.0
 		tempF := (tempC*9.0)/5.0 + 32.0
 		tempCtr.Measurement(int64(tempF))
 		fmt.Printf("TempF: %v\n", tempF)
