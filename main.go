@@ -63,9 +63,10 @@ func main() {
 
 func readTemperature() {
 	//Open memory range for GPIO access in /dev/mem
-	gpioErr := rpio.Open()
-	err := fmt.Errorf("failed to open mem range for GPIO access; emessage: %v", gpioErr)
-	common.ErrorHandler(err, true)
+	if gpioErr := rpio.Open(); gpioErr != nil {
+		err := fmt.Errorf("failed to open mem range for GPIO access; emessage: %v", gpioErr)
+		common.ErrorHandler(err, true)
+	}
 
 	pin := rpio.Pin(2)
 	pin.Input() // Input mode

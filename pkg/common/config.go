@@ -20,10 +20,14 @@ type Config struct {
 
 func GetConfig() *Config {
 	mp, mpErr := opentel.InitMeterProvider(exporterUrl, serviceName, environent)
-	ErrorHandler(fmt.Errorf("failed to initialize meter provider; [mpErr: %v]", mpErr), true)
+	if mpErr != nil {
+		ErrorHandler(fmt.Errorf("failed to initialize meter provider; [mpErr: %v]", mpErr), true)
+	}
 
 	tp, tpErr := opentel.InitTraceProvider(exporterUrl, serviceName, environent)
-	ErrorHandler(fmt.Errorf("failed to initialize trace provider; [tpErr: %v]", tpErr), true)
+	if tpErr != nil {
+		ErrorHandler(fmt.Errorf("failed to initialize trace provider; [tpErr: %v]", tpErr), true)
+	}
 
 	config := Config{
 		MeterProvider: mp,
