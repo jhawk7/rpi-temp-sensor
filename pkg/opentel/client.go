@@ -2,7 +2,6 @@ package opentel
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -17,21 +16,20 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 )
 
-const serviceName string = "rpi-thermostat"
-
-func InitTraceProvider() (tp *sdktrace.TracerProvider, tpErr error) {
+func InitTraceProvider(exporterUrl string, serviceName string, environment string) (tp *sdktrace.TracerProvider, tpErr error) {
 	//configure grpc exporter
-	exp_url := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-	// exports to localhost:4317 by defualt
-	exporter, expErr := otlptracegrpc.New(context.Background(), otlptracegrpc.WithEndpoint(exp_url))
+	if exporterUrl == "" {
+		exporterUrl = "localhost:4317"
+	}
+
+	exporter, expErr := otlptracegrpc.New(context.Background(), otlptracegrpc.WithEndpoint(exporterUrl))
 	if expErr != nil {
-		//fmt.Errorf("error initializing exporter [error: %v]", expErr)
 		tpErr = expErr
 		return
 	}
 
 	//configure trace provider resource to describe this application
-	r := getAppResource()
+	r := getAppResource(serviceName, environment)
 
 	//register exporter with new trace provider
 	tp = sdktrace.NewTracerProvider(
@@ -46,18 +44,19 @@ func InitTraceProvider() (tp *sdktrace.TracerProvider, tpErr error) {
 	return
 }
 
-func InitMeterProvider() (mp *controller.Controller, mpErr error) {
-	//exp_url := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") //should use localhost:4317 by default
-	exporter, expErr := otlpmetricgrpc.New(context.Background() /*otlpmetricgrpc.WithEndpoint(exp_url)*/)
+func InitMeterProvider(exporterUrl string, serviceName string, environment string) (mp *controller.Controller, mpErr error) {
+	if exporterUrl == "" {
+		exporterUrl = "localhost:4317"
+	}
+
+	exporter, expErr := otlpmetricgrpc.New(context.Background(), otlpmetricgrpc.WithEndpoint(exporterUrl))
 	if expErr != nil {
-		//log.Fatal(expErr)
 		mpErr = expErr
 		return
 	}
 
-	r := getAppResource()
+	r := getAppResource(serviceName, environment)
 
-	//mp := metric.Must(global.Meter(serviceName))
 	mp = controller.New(
 		processor.NewFactory(
 			simple.NewWithHistogramDistribution(),
@@ -67,21 +66,20 @@ func InitMeterProvider() (mp *controller.Controller, mpErr error) {
 		controller.WithExporter(exporter),
 		//configure resource for metrics
 		controller.WithResource(r),
-		controller.WithCollectPeriod(5*time.Second),
+		controller.WithCollectPeriod(10*time.Second),
 	)
 
 	return
 }
 
-func getAppResource() *resource.Resource {
+func getAppResource(serviceName string, environment string) *resource.Resource {
 	//configures resource to describe this application
 	r, _ := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String(serviceName),
-			semconv.ServiceVersionKey.String("v0.1.0"),
-			attribute.String("environment", "development"),
+			attribute.String("environment", environment),
 		),
 	)
 	return r
