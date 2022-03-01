@@ -76,18 +76,25 @@ func readTemperature() {
 	log.Info("starting temp reading")
 
 	for {
-		/*Temperature sensor input voltage relates to actual temp
-		Temp in °C = [(Vout in mV) - 500] / 10
-		(_pin.read()*3.3)-0.500)*100.0;
-		empF=(9.0 * myTMP36.read())/5.0 + 32.0;*/
+		/*
+			Temperature sensor input voltage relates to actual temp
+			reading is in mV; input using output voltage of 3.3v
+			voltage at pin in mv = ADC_read * 3300/1024
+			tempC = (volts - 0.5) * 100
+			tempF = tempc * 9 / 5 +32
+
+			Temp in °C = [(Vout in mV) - 500] / 10
+			(_pin.read()*3.3)-0.500)*100.0;
+			tempF=(9.0 * myTMP36.read())/5.0 + 32.0;*/
 
 		//create metric for temp reads
 		tempCtr, _ := thermometer.NewInt64Counter("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
-		voltage := pin.Read() // Read state from pin (High / Low)
-		read := ((float64(voltage) * 3.3) - 0.5) * 100.0
-		tempF := (9.0*read)/5.0 + 32.0
+		read := pin.Read() // Read state from pin (High / Low) in miliVolts
+		voltage := float64(read) * (3.3 / 1024.0)
+		tempC := (voltage - 0.5) * 100.0
+		tempF := (tempC*9.0)/5.0 + 32.0
 		tempCtr.Measurement(int64(tempF))
-		fmt.Printf("TempF: %v", tempF)
+		fmt.Printf("TempF: %v\n", tempF)
 		time.Sleep(5 * time.Second)
 	}
 }
