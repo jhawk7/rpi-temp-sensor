@@ -87,7 +87,7 @@ func readTemperature() {
 		read := ((float64(voltage) * 3.3) - 0.5) * 100.0
 		tempF := (9.0*read)/5.0 + 32.0
 		tempCtr.Measurement(int64(tempF))
-		fmt.Printf("TempF: %f", tempF)
-		time.Sleep(1 * time.Second)
+		fmt.Printf("TempF: %v", tempF)
+		time.Sleep(5 * time.Second)
 	}
 }
