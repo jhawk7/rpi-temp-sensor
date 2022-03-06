@@ -16,8 +16,9 @@ import (
 
 func main() {
 	// initialize meter and trace proivders
-	var exporterUrl string = os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-	opentel.InitOpentelProviders("development", exporterUrl, "rpi-thermometer")
+	environment := os.Getenv("ENVIRONMENT")
+	exporterUrl := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	opentel.InitOpentelProviders(environment, exporterUrl, "rpi-thermometer")
 
 	defer func() {
 		if shutdownErr := opentel.ShutdownOpentelProviders(); shutdownErr != nil {
