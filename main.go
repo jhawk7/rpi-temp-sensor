@@ -19,6 +19,9 @@ func main() {
 	environment := os.Getenv("ENVIRONMENT")
 	exporterUrl := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	opentel.InitOpentelProviders(environment, exporterUrl, "rpi-thermometer")
+	if opentel.GetTraceProvider() == nil {
+		panic(fmt.Errorf("its nil bro.."))
+	}
 
 	defer func() {
 		if shutdownErr := opentel.ShutdownOpentelProviders(); shutdownErr != nil {
