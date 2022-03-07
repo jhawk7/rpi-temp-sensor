@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,9 +15,9 @@ import (
 
 func main() {
 	// initialize meter and trace proivders
-	environment := os.Getenv("ENVIRONMENT")
-	exporterUrl := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-	opentel.InitOpentelProviders(environment, exporterUrl, "rpi-thermometer")
+	if opentelErr := opentel.InitOpentelProviders(); opentelErr != nil {
+		common.ErrorHandler(fmt.Errorf("failed to initialize opentel providers; %v", opentelErr), true)
+	}
 
 	defer func() {
 		if shutdownErr := opentel.ShutdownOpentelProviders(); shutdownErr != nil {
