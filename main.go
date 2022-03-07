@@ -32,8 +32,7 @@ func main() {
 	go readTemperature()
 
 	r := gin.New()
-	otelgin.WithTracerProvider(opentel.GetTraceProvider())
-	r.Use(otelgin.Middleware("rpi-thermometer"))
+	r.Use(otelgin.Middleware("rpi-thermometer", otelgin.WithTracerProvider(opentel.GetTraceProvider())))
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
