@@ -74,8 +74,8 @@ func readTemperature() {
 			tempF=(9.0 * myTMP36.read())/5.0 + 32.0;*/
 
 		read := pin.Read() // Read state from pin (High / Low) in miliVolts
-		voltage := (float64(read)*3.3 - 0.5) * 100.0
-		tempC := (voltage - 500.0) / 10.0
+		voltage := (float64(read) * 3.3) / 1024
+		tempC := (voltage - .5) * 100.0
 		tempF := (tempC*9.0)/5.0 + 32.0
 		tempLogger.Add(ctx, float64(tempF))
 		fmt.Printf("TempF: %v\n", tempF)
