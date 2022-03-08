@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -58,6 +59,7 @@ func readTemperature() {
 	if ctrErr != nil {
 		panic(fmt.Errorf("failed to create temp logger; %v", ctrErr))
 	}
+	ctx := context.Background()
 
 	for {
 		/*
@@ -75,7 +77,7 @@ func readTemperature() {
 		voltage := float64(read) * (3300.0 / 1024.0)
 		tempC := (voltage - 500.0) / 10.0
 		tempF := (tempC*9.0)/5.0 + 32.0
-		tempLogger.Measurement(float64(tempF))
+		tempLogger.Add(ctx, float64(tempF))
 		fmt.Printf("TempF: %v\n", tempF)
 		time.Sleep(5 * time.Second)
 	}
