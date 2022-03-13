@@ -45,7 +45,9 @@ func readTemperature() {
 		# Temp MSB, Temp LSB, Temp CRC, Humididty MSB, Humidity LSB, Humidity CRC
 	*/
 	conn, connErr := i2c.NewI2C(0x44, 0)
-	common.ErrorHandler(connErr, true)
+	if connErr != nil {
+		common.ErrorHandler(fmt.Errorf("failed to connect to i2c peripheral device; %v", connErr), true)
+	}
 	defer conn.Close()
 
 	//creates meter and counter via opentel meter provider
