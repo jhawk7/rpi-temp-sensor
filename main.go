@@ -76,8 +76,8 @@ func readTemperature() {
 			common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v\n", readErr), false)
 		}
 		log.Infof("%d bytes read from i2c device\n", size)
-		ftemp := ((uint32(rbytes[0])*256+uint32(rbytes[1]))*315.0)/65535.0 - 49.0
-		humidity := (uint32(rbytes[3])*256 + uint32(rbytes[4])) * 100.0 / 65535.0
+		ftemp := ((float32(rbytes[0])*256+float32(rbytes[1]))*315.0)/65535.0 - 49.0
+		humidity := (float32(rbytes[3])*256 + float32(rbytes[4])) * 100.0 / 65535.0
 		tempLogger.Add(ctx, float64(ftemp))
 		humidityLogger.Add(ctx, float64(humidity))
 		log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
