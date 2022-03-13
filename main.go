@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
+	i2c "github.com/d2r2/go-i2c"
 	"github.com/gin-gonic/gin"
 	"github.com/jhawk7/go-opentel/opentel"
 	"github.com/jhawk7/rpi-thermometer/pkg/common"
-	log "github.com/sirupsen/logrus"
-	rpio "github.com/stianeikeland/go-rpio/v4"
+	_ "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -24,9 +23,6 @@ func main() {
 		if shutdownErr := opentel.ShutdownOpentelProviders(); shutdownErr != nil {
 			common.ErrorHandler(fmt.Errorf("failed to stop opentel providers; %v", shutdownErr), false)
 		}
-
-		//close rpio pin addresses
-		rpio.Close()
 	}()
 
 	//start temp sensor
@@ -43,15 +39,14 @@ func main() {
 }
 
 func readTemperature() {
-	//Open memory range for GPIO access in /dev/mem
-	if gpioErr := rpio.Open(); gpioErr != nil {
-		err := fmt.Errorf("failed to open mem range for GPIO access; emessage: %v", gpioErr)
-		common.ErrorHandler(err, true)
-	}
-
-	pin := rpio.Pin(2)
-	pin.Input() // Input mode
-	log.Info("starting temp reading..")
+	/*
+		# SHT31 address, 0x44(68)
+		# Read data back from 0x00(00), 6 bytes
+		# Temp MSB, Temp LSB, Temp CRC, Humididty MSB, Humidity LSB, Humidity CRC
+	*/
+	conn, connErr := i2c.NewI2C(0x44, 0)
+	common.ErrorHandler(connErr, true)
+	defer conn.Close()
 
 	//creates meter and counter via opentel meter provider
 	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
@@ -62,23 +57,21 @@ func readTemperature() {
 	ctx := context.Background()
 
 	for {
-		/*
-			Temperature sensor input voltage relates to actual temp
-			reading is in mV; input using output voltage of 3.3v
-			voltage at pin in mv = ADC_read * 3300/1024
-			tempC = (volts - 500) / 10
-			tempF = tempc * 9 / 5 +32
-
-			Temp in °C = [(Vout in mV) - 500] / 10
-			(_pin.read()*3.3)-0.500)*100.0;
-			tempF=(9.0 * myTMP36.read())/5.0 + 32.0;*/
-
-		read := pin.Read() // Read state from pin (High / Low) in miliVolts
-		voltage := (float64(read) * 3.3) / 1024
-		tempC := (voltage - .5) * 100.0
-		tempF := (tempC*9.0)/5.0 + 32.0
-		tempLogger.Add(ctx, float64(tempF))
-		fmt.Printf("TempF: %v\n", tempF)
-		time.Sleep(5 * time.Second)
+		// buffer of len 4
+		buf := make([]byte, 4)
+		read, readErr := conn.ReadBytes(buf)
+		if readErr != nil {
+			common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v", readErr), false)
+		}
+		tempLogger.Add(ctx, float64(read))
+		fmt.Printf("Value read from readbytes: %v", read)
+		//ftemp := (buf[0] * uint(256))
 	}
+
+	/*
+		// Convert the data
+		double cTemp = (((data[0] * 256) + data[1]) * 175.0) / 65535.0  - 45.0;
+		double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
+		double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
+	*/
 }
