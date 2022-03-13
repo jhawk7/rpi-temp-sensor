@@ -9,8 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jhawk7/go-opentel/opentel"
 	"github.com/jhawk7/rpi-thermometer/pkg/common"
-	"github.com/sirupsen/logrus"
-	_ "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -76,13 +75,12 @@ func readTemperature() {
 		if readErr != nil {
 			common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v\n", readErr), false)
 		}
-		fmt.Printf("%d bytes read from readbytes\n", size)
-		logrus.Infof("%d bytes read from i2c device\n", size)
-		ftemp := ((float32(rbytes[0])*256+float32(rbytes[1]))*315.0)/65535.0 - 49.0
-		humidity := (float32(rbytes[3])*256 + float32(rbytes[4])) * 100.0 / 65535.0
+		log.Infof("%d bytes read from i2c device\n", size)
+		ftemp := ((uint32(rbytes[0])*256+uint32(rbytes[1]))*315.0)/65535.0 - 49.0
+		humidity := (uint32(rbytes[3])*256 + uint32(rbytes[4])) * 100.0 / 65535.0
 		tempLogger.Add(ctx, float64(ftemp))
 		humidityLogger.Add(ctx, float64(humidity))
-		fmt.Printf("Temp: %.2f F; Humidity: %.2f RH", ftemp, humidity)
+		log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
 		time.Sleep(2 * time.Second)
 	}
 
