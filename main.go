@@ -44,7 +44,9 @@ func readTemperature() {
 		# Read data back from 0x00(00), 6 bytes
 		# Temp MSB, Temp LSB, Temp CRC, Humididty MSB, Humidity LSB, Humidity CRC
 	*/
-	conn, connErr := i2c.NewI2C(0x44, 0)
+
+	// Create new connection to I2C bus on line 4 with address 0x44
+	conn, connErr := i2c.NewI2C(0x44, 4)
 	if connErr != nil {
 		common.ErrorHandler(fmt.Errorf("failed to connect to i2c peripheral device; %v", connErr), true)
 	}
