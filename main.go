@@ -42,8 +42,7 @@ func main() {
 func readTemperature() {
 	//creates meter and counter via opentel meter provider
 	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
-	//tempLogger, ctrErr := thermometer.NewFloat64Counter("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
-	tempLogger, ctrErr := thermometer.NewFloat64Counter("rpi-thermometer.temp", nil, metric.WithDescription("logs temperature in F"))
+	tempLogger, ctrErr := thermometer.NewFloat64Counter("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
 	if ctrErr != nil {
 		panic(fmt.Errorf("failed to create temp logger; %v\n", ctrErr))
 	}
