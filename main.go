@@ -40,6 +40,20 @@ func main() {
 }
 
 func readTemperature() {
+	//creates meter and counter via opentel meter provider
+	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
+	//tempLogger, ctrErr := thermometer.NewFloat64Counter("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
+	tempLogger, ctrErr := thermometer.NewFloat64Counter("rpi-thermometer.temp", nil, metric.WithDescription("logs temperature in F"))
+	if ctrErr != nil {
+		panic(fmt.Errorf("failed to create temp logger; %v\n", ctrErr))
+	}
+
+	humidityLogger, ctrErr2 := thermometer.NewFloat64Counter("rpi-thermometer.humidity", metric.WithDescription("logs humidity"))
+	if ctrErr2 != nil {
+		panic(fmt.Errorf("failed to create humidity logger; %v\n", ctrErr2))
+	}
+	ctx := context.Background()
+
 	/*
 		# SHT31 address, 0x44(68)
 		# Read data back from 0x00(00), 6 bytes
@@ -55,29 +69,26 @@ func readTemperature() {
 	}
 	defer conn.Close()
 
-	//creates meter and counter via opentel meter provider
-	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
-	tempLogger, ctrErr := thermometer.NewFloat64Counter("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
-	if ctrErr != nil {
-		panic(fmt.Errorf("failed to create temp logger; %v\n", ctrErr))
+	//send repeatablility measurement command
+	//wbuf := make([]byte, 2)
+	wbuf := []byte{0x2C, 0x06}
+	wlen, wErr := conn.WriteBytes(wbuf)
+	if wErr != nil {
+		common.ErrorHandler(fmt.Errorf("failed to write cmd to i2c device; %v", wErr), true)
 	}
-
-	humidityLogger, ctrErr2 := thermometer.NewFloat64Counter("rpi-thermometer.humidity", metric.WithDescription("logs humidity"))
-	if ctrErr2 != nil {
-		panic(fmt.Errorf("failed to create humidity logger; %v\n", ctrErr2))
-	}
-	ctx := context.Background()
+	log.Infof("writing %v bytes to i2c device\n", wlen)
 
 	for {
 		// reads n bytes from device starting from given register addr
 		// reads 6 bytes of data: temp msb, temp lsb, temp CRC, humidity msb, humidity lsb, humidity CRC
-		rbytes, size, readErr := conn.ReadRegBytes(0x44, 6)
+		rbuf := make([]byte, 6)
+		rlen, readErr := conn.ReadBytes(rbuf)
 		if readErr != nil {
-			common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v\n", readErr), false)
+			common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v\n", readErr), true)
 		}
-		log.Infof("%d bytes read from i2c device\n", size)
-		ftemp := ((float32(rbytes[0])*256+float32(rbytes[1]))*315.0)/65535.0 - 49.0
-		humidity := (float32(rbytes[3])*256 + float32(rbytes[4])) * 100.0 / 65535.0
+		log.Infof("%v bytes read from i2c device\n", rlen)
+		ftemp := ((float32(rbuf[0])*256+float32(rbuf[1]))*315.0)/65535.0 - 49.0
+		humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
 		tempLogger.Add(ctx, float64(ftemp))
 		humidityLogger.Add(ctx, float64(humidity))
 		log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
