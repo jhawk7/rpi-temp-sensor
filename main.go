@@ -65,13 +65,13 @@ func readTemperature() {
 	for {
 		// send repeatable measurement command to i2c device to begin reading temp and humidity
 		// Command msb, command lsb(0x2C, 0x06)
-		/* wbuf := []byte{0x2C, 0x06}
+		wbuf := []byte{0x2C, 0x06}
 		wlen, wErr := conn.WriteBytes(wbuf)
 		if wErr != nil {
 			common.ErrorHandler(fmt.Errorf("failed to write cmd to i2c device; %v", wErr), true)
 		}
 		log.Infof("writing %v bytes to i2c device\n", wlen)
-		*/
+
 		// read 6 bytes of data for: temp msb, temp lsb, temp CRC, humidity msb, humidity lsb, humidity CRC
 		rbuf := make([]byte, 6)
 		rlen, readErr := conn.ReadBytes(rbuf)
