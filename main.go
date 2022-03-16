@@ -53,13 +53,7 @@ func readTemperature() {
 	}
 	ctx := context.Background()
 
-	/*
-		# SHT31 address, 0x44(68)
-		# Read data back from 0x00(00), 6 bytes
-		# Temp MSB, Temp LSB, Temp CRC, Humididty MSB, Humidity LSB, Humidity CRC
-	*/
-
-	// Create new connection to I2C bus on line 1 with address 0x44
+	// Create new connection to I2C bus on line 1 with address 0x44 (default SHT31-D address location)
 	// run `i2cdetect -y 1` to view vtable for specific device addr
 	// when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
 	conn, connErr := i2c.NewI2C(0x44, 1)
@@ -68,30 +62,30 @@ func readTemperature() {
 	}
 	defer conn.Close()
 
-	//send repeatablility measurement command
-	//wbuf := make([]byte, 2)
-	wbuf := []byte{0x2C, 0x06}
-	wlen, wErr := conn.WriteBytes(wbuf)
-	if wErr != nil {
-		common.ErrorHandler(fmt.Errorf("failed to write cmd to i2c device; %v", wErr), true)
-	}
-	log.Infof("writing %v bytes to i2c device\n", wlen)
-
 	for {
-		// reads n bytes from device starting from given register addr
-		// reads 6 bytes of data: temp msb, temp lsb, temp CRC, humidity msb, humidity lsb, humidity CRC
+		// send repeatable measurement command to i2c device to begin reading temp and humidity
+		// Command msb, command lsb(0x2C, 0x06)
+		wbuf := []byte{0x2C, 0x06}
+		wlen, wErr := conn.WriteBytes(wbuf)
+		if wErr != nil {
+			common.ErrorHandler(fmt.Errorf("failed to write cmd to i2c device; %v", wErr), true)
+		}
+		log.Infof("writing %v bytes to i2c device\n", wlen)
+
+		// read 6 bytes of data for: temp msb, temp lsb, temp CRC, humidity msb, humidity lsb, humidity CRC
 		rbuf := make([]byte, 6)
 		rlen, readErr := conn.ReadBytes(rbuf)
 		if readErr != nil {
 			common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v\n", readErr), true)
 		}
 		log.Infof("%v bytes read from i2c device\n", rlen)
+
 		ftemp := ((float32(rbuf[0])*256+float32(rbuf[1]))*315.0)/65535.0 - 49.0
 		humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
 		tempLogger.Add(ctx, float64(ftemp))
 		humidityLogger.Add(ctx, float64(humidity))
 		log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 
 	/*
