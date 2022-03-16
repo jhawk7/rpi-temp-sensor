@@ -80,6 +80,13 @@ func readTemperature() {
 		}
 		log.Infof("%v bytes read from i2c device\n", rlen)
 
+		/*
+			// Convert the data
+			double cTemp = (((data[0] * 256) + data[1]) * 175.0) / 65535.0  - 45.0;
+			double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
+			double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
+		*/
+
 		ftemp := ((float32(rbuf[0])*256+float32(rbuf[1]))*315.0)/65535.0 - 49.0
 		humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
 		tempLogger.Add(ctx, float64(ftemp))
@@ -87,11 +94,4 @@ func readTemperature() {
 		log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
 		time.Sleep(5 * time.Second)
 	}
-
-	/*
-		// Convert the data
-		double cTemp = (((data[0] * 256) + data[1]) * 175.0) / 65535.0  - 45.0;
-		double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
-		double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
-	*/
 }
