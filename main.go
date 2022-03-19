@@ -11,8 +11,11 @@ import (
 	"github.com/jhawk7/rpi-thermometer/pkg/common"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
+
+var i2cConn *i2c.I2C
 
 func main() {
 	// initialize meter and trace proivders
@@ -26,7 +29,16 @@ func main() {
 		}
 	}()
 
-	//start temp sensor
+	// Create new connection to I2C bus on line 1 with address 0x44 (default SHT31-D address location)
+	// run `i2cdetect -y 1` to view vtable for specific device addr
+	// when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
+	conn, connErr := i2c.NewI2C(0x44, 1)
+	if connErr != nil {
+		common.ErrorHandler(fmt.Errorf("failed to connect to i2c peripheral device; %v\n", connErr), true)
+	}
+	defer conn.Close()
+	i2cConn = conn
+
 	go readTemperature()
 
 	r := gin.New()
@@ -42,56 +54,68 @@ func main() {
 func readTemperature() {
 	//creates meter and counter via opentel meter provider
 	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
-	tempLogger, ctrErr := thermometer.NewFloat64Histogram("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
-	if ctrErr != nil {
-		panic(fmt.Errorf("failed to create temp logger; %v\n", ctrErr))
-	}
+	//tempLogger, ctrErr := thermometer.NewFloat64Histogram("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
 
-	humidityLogger, ctrErr2 := thermometer.NewFloat64Histogram("rpi-thermometer.humidity", metric.WithDescription("logs humidity"))
+	/* humidityLogger, ctrErr2 := thermometer.NewFloat64Histogram("rpi-thermometer.humidity", metric.WithDescription("logs humidity"))
 	if ctrErr2 != nil {
-		panic(fmt.Errorf("failed to create humidity logger; %v\n", ctrErr2))
-	}
-	ctx := context.Background()
+		common.ErrorHandler(fmt.Errorf("failed to create humidity logger; %v\n", ctrErr2), true)
+	} */
+	//ctx := context.Background()
 
 	// Create new connection to I2C bus on line 1 with address 0x44 (default SHT31-D address location)
 	// run `i2cdetect -y 1` to view vtable for specific device addr
 	// when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
-	conn, connErr := i2c.NewI2C(0x44, 1)
+	/* conn, connErr := i2c.NewI2C(0x44, 1)
 	if connErr != nil {
 		common.ErrorHandler(fmt.Errorf("failed to connect to i2c peripheral device; %v\n", connErr), true)
 	}
-	defer conn.Close()
+	defer conn.Close() */
 
 	for {
-		// send repeatable measurement command to i2c device to begin reading temp and humidity
-		// Command msb, command lsb(0x2C, 0x06)
-		wbuf := []byte{0x2C, 0x06}
-		wlen, wErr := conn.WriteBytes(wbuf)
-		if wErr != nil {
-			common.ErrorHandler(fmt.Errorf("failed to write cmd to i2c device; %v", wErr), true)
+		_, gaugeErr := thermometer.NewFloat64GaugeObserver("rpi-thermometer.temp", temperatureCallback)
+		if gaugeErr != nil {
+			common.ErrorHandler(fmt.Errorf("failed to create temp logger; %v\n", gaugeErr), true)
 		}
-		log.Infof("writing %v bytes to i2c device\n", wlen)
-
-		// read 6 bytes of data for: temp msb, temp lsb, temp CRC, humidity msb, humidity lsb, humidity CRC
-		rbuf := make([]byte, 6)
-		rlen, readErr := conn.ReadBytes(rbuf)
-		if readErr != nil {
-			common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v\n", readErr), true)
-		}
-		log.Infof("%v bytes read from i2c device\n", rlen)
-
-		/*
-			// Convert the data
-			double cTemp = (((data[0] * 256) + data[1]) * 175.0) / 65535.0  - 45.0;
-			double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
-			double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
-		*/
-
-		ftemp := ((float32(rbuf[0])*256+float32(rbuf[1]))*315.0)/65535.0 - 49.0
-		humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
-		tempLogger.Record(ctx, float64(ftemp))
-		humidityLogger.Record(ctx, float64(humidity))
-		log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
 		time.Sleep(5 * time.Second)
 	}
+}
+
+func getReading() (float64, float64) {
+	// send repeatable measurement command to i2c device to begin reading temp and humidity
+	// Command msb, command lsb(0x2C, 0x06)
+	wbuf := []byte{0x2C, 0x06}
+	wlen, wErr := i2cConn.WriteBytes(wbuf)
+	if wErr != nil {
+		common.ErrorHandler(fmt.Errorf("failed to write cmd to i2c device; %v", wErr), true)
+	}
+	log.Infof("writing %v bytes to i2c device\n", wlen)
+
+	// read 6 bytes of data for: temp msb, temp lsb, temp CRC, humidity msb, humidity lsb, humidity CRC
+	rbuf := make([]byte, 6)
+	rlen, readErr := i2cConn.ReadBytes(rbuf)
+	if readErr != nil {
+		common.ErrorHandler(fmt.Errorf("failed to read bytes from i2c device; %v\n", readErr), true)
+	}
+	log.Infof("%v bytes read from i2c device\n", rlen)
+
+	/*
+		// Convert the data
+		double cTemp = (((data[0] * 256) + data[1]) * 175.0) / 65535.0  - 45.0;
+		double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
+		double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
+	*/
+
+	ftemp := ((float32(rbuf[0])*256+float32(rbuf[1]))*315.0)/65535.0 - 49.0
+	humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
+	//tempLogger.Record(ctx, float64(ftemp))
+	//humidityLogger.Record(ctx, float64(humidity))
+	log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
+	//time.Sleep(5 * time.Second)
+	return float64(ftemp), float64(humidity)
+}
+
+var temperatureCallback = func(ctx context.Context, result metric.Float64ObserverResult) {
+	temp, humidity := getReading()
+	result.Observe(temp, attribute.String("temperature", "degrees F"))
+	result.Observe(humidity, attribute.String("humidity", "RH"))
 }
