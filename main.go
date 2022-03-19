@@ -29,9 +29,11 @@ func main() {
 		}
 	}()
 
-	// Create new connection to I2C bus on line 1 with address 0x44 (default SHT31-D address location)
-	// run `i2cdetect -y 1` to view vtable for specific device addr
-	// when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
+	/*
+	* Create new connection to I2C bus on line 1 with address 0x44 (default SHT31-D address location)
+	* run `i2cdetect -y 1` to view vtable for specific device addr
+	* when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
+	 */
 	conn, connErr := i2c.NewI2C(0x44, 1)
 	if connErr != nil {
 		common.ErrorHandler(fmt.Errorf("failed to connect to i2c peripheral device; %v\n", connErr), true)
@@ -52,32 +54,13 @@ func main() {
 }
 
 func readTemperature() {
-	//creates meter and counter via opentel meter provider
+	// creates meter and gauge observer from opentel meter provider
 	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
-	//tempLogger, ctrErr := thermometer.NewFloat64Histogram("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
-
-	/* humidityLogger, ctrErr2 := thermometer.NewFloat64Histogram("rpi-thermometer.humidity", metric.WithDescription("logs humidity"))
-	if ctrErr2 != nil {
-		common.ErrorHandler(fmt.Errorf("failed to create humidity logger; %v\n", ctrErr2), true)
-	} */
-	//ctx := context.Background()
-
-	// Create new connection to I2C bus on line 1 with address 0x44 (default SHT31-D address location)
-	// run `i2cdetect -y 1` to view vtable for specific device addr
-	// when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
-	/* conn, connErr := i2c.NewI2C(0x44, 1)
-	if connErr != nil {
-		common.ErrorHandler(fmt.Errorf("failed to connect to i2c peripheral device; %v\n", connErr), true)
-	}
-	defer conn.Close() */
-
-	//for {
-	_, gaugeErr := thermometer.NewFloat64GaugeObserver("rpi-thermometer.temp", temperatureCallback)
+	// gauge observer continuously polls data from callback
+	_, gaugeErr := thermometer.NewFloat64GaugeObserver("rpi-thermometer.read", temperatureCallback)
 	if gaugeErr != nil {
 		common.ErrorHandler(fmt.Errorf("failed to create temp logger; %v\n", gaugeErr), true)
 	}
-	//time.Sleep(5 * time.Second)
-	//}
 }
 
 func getReading() (float64, float64) {
@@ -113,7 +96,7 @@ func getReading() (float64, float64) {
 
 var temperatureCallback = func(ctx context.Context, result metric.Float64ObserverResult) {
 	temp, humidity := getReading()
-	result.Observe(temp, attribute.String("temperature", "degrees F"))
-	result.Observe(humidity, attribute.String("humidity", "RH"))
+	result.Observe(temp, attribute.String("read.type", "temperature (F)"))
+	result.Observe(humidity, attribute.String("read.type", "humidity (RH)"))
 	time.Sleep(5 * time.Second)
 }
