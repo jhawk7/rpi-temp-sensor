@@ -42,12 +42,12 @@ func main() {
 func readTemperature() {
 	//creates meter and counter via opentel meter provider
 	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
-	tempLogger, ctrErr := thermometer.NewFloat64Counter("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
+	tempLogger, ctrErr := thermometer.NewFloat64Histogram("rpi-thermometer.temp", metric.WithDescription("logs temperature in F"))
 	if ctrErr != nil {
 		panic(fmt.Errorf("failed to create temp logger; %v\n", ctrErr))
 	}
 
-	humidityLogger, ctrErr2 := thermometer.NewFloat64Counter("rpi-thermometer.humidity", metric.WithDescription("logs humidity"))
+	humidityLogger, ctrErr2 := thermometer.NewFloat64Histogram("rpi-thermometer.humidity", metric.WithDescription("logs humidity"))
 	if ctrErr2 != nil {
 		panic(fmt.Errorf("failed to create humidity logger; %v\n", ctrErr2))
 	}
@@ -89,8 +89,8 @@ func readTemperature() {
 
 		ftemp := ((float32(rbuf[0])*256+float32(rbuf[1]))*315.0)/65535.0 - 49.0
 		humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
-		tempLogger.Add(ctx, float64(ftemp))
-		humidityLogger.Add(ctx, float64(humidity))
+		tempLogger.Record(ctx, float64(ftemp))
+		humidityLogger.Record(ctx, float64(humidity))
 		log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
 		time.Sleep(5 * time.Second)
 	}
