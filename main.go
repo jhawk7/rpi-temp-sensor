@@ -71,13 +71,13 @@ func readTemperature() {
 	}
 	defer conn.Close() */
 
-	for {
-		_, gaugeErr := thermometer.NewFloat64GaugeObserver("rpi-thermometer.temp", temperatureCallback)
-		if gaugeErr != nil {
-			common.ErrorHandler(fmt.Errorf("failed to create temp logger; %v\n", gaugeErr), true)
-		}
-		time.Sleep(5 * time.Second)
+	//for {
+	_, gaugeErr := thermometer.NewFloat64GaugeObserver("rpi-thermometer.temp", temperatureCallback)
+	if gaugeErr != nil {
+		common.ErrorHandler(fmt.Errorf("failed to create temp logger; %v\n", gaugeErr), true)
 	}
+	//time.Sleep(5 * time.Second)
+	//}
 }
 
 func getReading() (float64, float64) {
@@ -107,10 +107,7 @@ func getReading() (float64, float64) {
 
 	ftemp := ((float32(rbuf[0])*256+float32(rbuf[1]))*315.0)/65535.0 - 49.0
 	humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
-	//tempLogger.Record(ctx, float64(ftemp))
-	//humidityLogger.Record(ctx, float64(humidity))
 	log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
-	//time.Sleep(5 * time.Second)
 	return float64(ftemp), float64(humidity)
 }
 
@@ -118,4 +115,5 @@ var temperatureCallback = func(ctx context.Context, result metric.Float64Observe
 	temp, humidity := getReading()
 	result.Observe(temp, attribute.String("temperature", "degrees F"))
 	result.Observe(humidity, attribute.String("humidity", "RH"))
+	time.Sleep(5 * time.Second)
 }
