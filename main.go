@@ -10,7 +10,6 @@ import (
 	"github.com/jhawk7/go-opentel/opentel"
 	"github.com/jhawk7/rpi-thermometer/pkg/common"
 	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -44,7 +43,6 @@ func main() {
 	go readTemperature()
 
 	r := gin.New()
-	r.Use(otelgin.Middleware("rpi-thermometer", otelgin.WithTracerProvider(opentel.GetTraceProvider())))
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
@@ -61,6 +59,13 @@ func readTemperature() {
 	if gaugeErr != nil {
 		common.ErrorHandler(fmt.Errorf("failed to create temp logger; %v\n", gaugeErr), true)
 	}
+}
+
+var temperatureCallback = func(ctx context.Context, result metric.Float64ObserverResult) {
+	temp, humidity := getReading()
+	result.Observe(temp, attribute.String("read.type", "temperature (F)"))
+	result.Observe(humidity, attribute.String("read.type", "humidity (RH)"))
+	time.Sleep(5 * time.Second)
 }
 
 func getReading() (float64, float64) {
@@ -92,11 +97,4 @@ func getReading() (float64, float64) {
 	humidity := (float32(rbuf[3])*256 + float32(rbuf[4])) * 100.0 / 65535.0
 	log.Infof("Temp: %.2f F\n Humidity: %.2f RH\n", ftemp, humidity)
 	return float64(ftemp), float64(humidity)
-}
-
-var temperatureCallback = func(ctx context.Context, result metric.Float64ObserverResult) {
-	temp, humidity := getReading()
-	result.Observe(temp, attribute.String("read.type", "temperature (F)"))
-	result.Observe(humidity, attribute.String("read.type", "humidity (RH)"))
-	time.Sleep(5 * time.Second)
 }
