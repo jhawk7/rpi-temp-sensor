@@ -1,0 +1,30 @@
+# RPI - Thermometer
+* Uses SHT31-D i2c device (temperature and humidity sensor) on raspberry pi to read temperature and humidity, and opentelemetry to send telemetry metrics to a collector (running on separate machine with prometheus backend) to be displayed as graph via prometheus.
+
+# Flow
+## Connect to i2c device
+* (See Go d2r2/go-i2c pkg documentation)
+* Create new connection to I2C bus on line 1 with address `0x44` (default SHT31-D address location)
+* run `i2cdetect -y 1` to view vtable for specific device addr
+* when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
+
+## Setup Opentelemetry Gauge Observer via MeterProvider
+* (see opentelemetry gauge documentation)
+* the gauge observer will continously trigger the registered callback function and observe/record the results
+* the callback function, in this case, runs "getReading()" to get the temperature and humidity readings and make them observable
+
+## Send command to read temp and humidity and convert response bytes to readable data
+* send repeatable measurement command to i2c device to begin reading temp and humidity (command - (0x2C, 0x06) given lsb addressing)
+* convert response bytes to redable readings (c++ code snippet)
+```
+double cTemp = (((data[0] * 256) + data[1]) * 175.0) / 65535.0  - 45.0;
+double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
+double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
+```
+
+# Helpful Links Used
+* Opentelemetry gauge documentation - (https://opentelemetry.io/docs/reference/specification/metrics/api/#asynchronous-gauge)
+* Opentel Go pkg - homemade opentel go pkg for handling the openetelmetry setup (https://github.com/jhawk7/go-opentel)
+* SHT31-D documentation - http://www.getmicros.net/raspberry-pi-and-sht31-sensor-example-in-c.php
+* Useful i2c doc - (https://dave.cheney.net/tag/i2c)
+* Go d2r2/go-i2c pkg documentation - (https://github.com/d2r2/go-i2c)
