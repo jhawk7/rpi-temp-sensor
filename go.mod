@@ -7,7 +7,6 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/jhawk7/go-opentel v0.0.0-20220307172658-3a592e677351
 	github.com/sirupsen/logrus v1.8.1
-	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.29.0
 	go.opentelemetry.io/otel v1.4.1
 	go.opentelemetry.io/otel/metric v0.27.0
 )
