@@ -87,7 +87,7 @@ func getReading() (float64, float64) {
 	log.Infof("%v bytes read from i2c device\n", rlen)
 
 	/*
-		// Convert the data
+		convert response bytes to readable data
 		double cTemp = (((data[0] * 256) + data[1]) * 175.0) / 65535.0  - 45.0;
 		double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
 		double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
