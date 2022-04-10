@@ -1,0 +1,7 @@
+services:
+  rpi-thermometer:
+    build: .
+    image: jhawk7/rpi-thermometer
+    ports: 
+      - "8080:8080"
+    
