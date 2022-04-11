@@ -1,10 +1,10 @@
 FROM golang:1.17-alpine AS build
 RUN apk add build-base
 WORKDIR /build
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
 COPY . ./
+#COPY go.mod ./
+#COPY go.sum ./
+RUN go mod download
 RUN go build -o thermo
 
 FROM golang:1.17-alpine
