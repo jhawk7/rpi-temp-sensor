@@ -1,4 +1,5 @@
 FROM golang:1.17-alpine AS build
+RUN apk add build-base
 WORKDIR /build
 COPY . ./
 RUN go mod download
