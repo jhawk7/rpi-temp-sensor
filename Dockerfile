@@ -12,5 +12,4 @@ WORKDIR /app
 #COPY --from=build thermo thermo
 COPY thermo ./
 EXPOSE 8080
-USER nonroot:nonroot
-ENTRYPOINT ["/thermo"]
+CMD [ "thermo" ]
