@@ -1,6 +1,6 @@
 FROM golang:1.17-alpine AS build
 WORKDIR /build
-COPY * ./
+COPY . ./
 RUN go mod download
 RUN go build -o thermo
 
