@@ -1,9 +1,7 @@
 FROM golang:1.17-alpine AS build
 WORKDIR /build
-COPY go.mod ./
-COPY go.sum ./
+COPY * ./
 RUN go mod download
-COPY *.go ./
 RUN go build -o thermo
 
 FROM golang:1.17-alpine
