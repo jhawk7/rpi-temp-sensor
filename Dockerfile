@@ -12,4 +12,4 @@ WORKDIR /app
 #COPY --from=build thermo thermo
 COPY thermo ./
 EXPOSE 8080
-CMD thermo
+CMD ./thermo
