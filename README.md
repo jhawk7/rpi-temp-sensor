@@ -22,6 +22,16 @@ double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
 double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
 ```
 
+## Healthcheck
+* a healthcheck endpoint is setup on `port 8080` using gin to remotely verify that everything is running smoothly
+* `curl http://<device_ip>:8080/healthcheck`
+
+## Dockerization
+* the dockerfile builds the go binary in the build stage (GOOS set to linux and GOARCH set to arm for raspberry pi zero w), and executes the binary in the 2nd stage
+* the i2c device entry folder (SHT31-D) is mounted in the container using the `device` flag in the docker-compose file
+* with dockerization, we are able to make changes to the code on our local device, build and update the image, then pull the new image down to the raspberry pi from docker hub
+* the application can now be started via docker from a cron job or service in linux
+
 # Helpful Links Used
 * Opentelemetry gauge documentation - (https://opentelemetry.io/docs/reference/specification/metrics/api/#asynchronous-gauge)
 * Opentel Go pkg - homemade opentel go pkg for handling the openetelmetry setup (https://github.com/jhawk7/go-opentel)
