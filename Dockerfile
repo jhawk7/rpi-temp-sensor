@@ -1,12 +1,12 @@
-FROM golang:1.17-alpine AS build
-RUN apk add build-base
-WORKDIR /build
+FROM golang:1.17 AS build
+WORKDIR /go/src/github.com/jhawk7/rpi-thermometer/
 COPY . ./
 RUN go mod download
-RUN go build -o /bin/thermo
+RUN GOOS=linux GOARCH=arm go build -o thermo
 
-FROM golang:1.17-alpine
-WORKDIR /app
-COPY --from=build /bin/thermo /bin/thermo
+FROM balenalib/rpi-raspbian:bullseye
+WORKDIR /
+COPY --from=build /go/src/github.com/jhawk7/rpi-thermometer/thermo ./
 EXPOSE 8080
-CMD ["/bin/thermo"]
+CMD ["./thermo"]
+# i2c bus folder must be mounted from pi

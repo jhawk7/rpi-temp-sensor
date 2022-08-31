@@ -6,4 +6,6 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    
+    devices:
+      #mount i2c bus from pi for temp device
+      - "/dev/i2c-1:/dev/i2c-1"
