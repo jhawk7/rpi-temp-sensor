@@ -4,6 +4,7 @@ services:
     image: jhawk7/rpi-thermometer
     ports: 
       - "8080:8080"
+    restart: always
     env_file:
       - .env
     devices:
