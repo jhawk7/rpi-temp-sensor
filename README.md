@@ -1,5 +1,10 @@
-# RPI - Thermometer
-* Uses SHT31-D i2c device (temperature and humidity sensor) on raspberry pi to read temperature and humidity, and opentelemetry to send telemetry metrics to a collector (running on separate machine with prometheus backend) to be displayed as graph via prometheus.
+# RPI - Thermometer - Pi Zero
+
+* Uses SHT31-D i2c device (temperature and humidity sensor) on raspberry pi (zero or better) to read temperature and humidity, and opentelemetry to send telemetry metrics to a collector (running on separate machine with prometheus backend) to be displayed as graph via prometheus.
+
+# RPI - Thermometer - Embedded
+
+* Refactored for raspberry pi pico to read temperature and humidity, then publish reads to an MQTT server (running independently) for subscribers (such as prometheus, which can use grafana to graph the reads). This project uses tiny-go for compilation on embedded devices (pico)
 
 # Flow
 ## Connect to i2c device
@@ -8,7 +13,7 @@
 * run `i2cdetect -y 1` to view vtable for specific device addr
 * when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
 
-## Setup Opentelemetry Gauge Observer via MeterProvider
+## Setup Opentelemetry Gauge Observer via MeterProvider **(Pi Zero Only)**
 * (see opentelemetry gauge documentation)
 * the gauge observer will continously trigger the registered callback function and observe/record the results
 * the callback function, in this case, runs "getReading()" to get the temperature and humidity readings and make them observable
@@ -22,11 +27,11 @@ double fTemp = (((data[0] * 256) + data[1]) * 315.0) / 65535.0 - 49.0;
 double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
 ```
 
-## Healthcheck
+## Healthcheck **(Pi Zero Only)**
 * a healthcheck endpoint is setup on `port 8080` using gin to remotely verify that everything is running smoothly
 * `curl http://<device_ip>:8080/healthcheck`
 
-## Dockerization
+## Dockerization **(Pi Zero Only)**
 * the dockerfile builds the go binary in the build stage (GOOS set to linux and GOARCH set to arm for raspberry pi zero w), and executes the binary in the 2nd stage
 * port 8080 is exposed in the image for the healthcheck endpoint
 * the i2c device entry folder (SHT31-D) is mounted in the container using the `device` flag in the docker-compose file
@@ -39,3 +44,5 @@ double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
 * SHT31-D documentation - http://www.getmicros.net/raspberry-pi-and-sht31-sensor-example-in-c.php
 * Useful i2c doc - (https://dave.cheney.net/tag/i2c)
 * Go d2r2/go-i2c pkg documentation - (https://github.com/d2r2/go-i2c)
+* List of TinyGo Drivers for various hardware components (for embedded) - (https://github.com/tinygo-org/drivers)
+* TinyGo working with i2c - (https://tinygo.org/docs/concepts/peripherals/i2c/)

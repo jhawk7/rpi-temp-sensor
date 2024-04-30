@@ -70,7 +70,7 @@ var temperatureCallback = func(ctx context.Context, result metric.Float64Observe
 
 func getReading() (float64, float64) {
 	// send repeatable measurement command to i2c device to begin reading temp and humidity
-	// Command msb, command lsb(0x2C, 0x06)
+	// Command msb and command lsb (0x2C, 0x06)
 	wbuf := []byte{0x2C, 0x06}
 	wlen, wErr := i2cConn.WriteBytes(wbuf)
 	if wErr != nil {
