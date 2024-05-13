@@ -4,7 +4,8 @@
 
 # RPI - Thermometer - Embedded
 
-* Refactored for raspberry pi pico to read temperature and humidity, then publish reads to an MQTT server (running independently) for subscribers (such as prometheus, which can use grafana to graph the reads). This project uses tiny-go for compilation on embedded devices (pico)
+* Refactored for raspberry pi pico to read temperature and humidity, then publish reads to an MQTT server (running independently) for subscribers (such as prometheus, which can use grafana to graph the reads). This project uses micro-python (embedded-mp) for embedded devices (picow).
+**TinyGO (embedded-go) does not yet support the wifi chip on the picow**
 
 # Flow
 ## Connect to i2c device
@@ -46,3 +47,5 @@ double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
 * Go d2r2/go-i2c pkg documentation - (https://github.com/d2r2/go-i2c)
 * List of TinyGo Drivers for various hardware components (for embedded) - (https://github.com/tinygo-org/drivers)
 * TinyGo working with i2c - (https://tinygo.org/docs/concepts/peripherals/i2c/)
+* MicroPython for the pico - (https://docs.micropython.org/en/latest/rp2/quickref.html)
+* Connecting pico to mqtt with micropython - (https://www.instructables.com/Connecting-Raspberry-Pi-Pico-Ws-With-MQTT/)
