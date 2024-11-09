@@ -20,7 +20,7 @@ class mqttClient:
       port = 1883,
       user = config.ENV["MQTT_USER"],
       password = config.ENV["MQTT_PASS"],
-      keepalive=7000,
+      keepalive=10,
       ssl=False
     )
     
@@ -108,7 +108,7 @@ def main():
     print("entering power saver mode..")
     cMQTT.disconnect()
     wconn.disconnect()
-    sleep(3600)
+    sleep(1800)
 
 
 if __name__ == "__main__":
