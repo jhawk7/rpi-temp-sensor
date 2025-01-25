@@ -7,14 +7,16 @@ from time import sleep
 
 sleep(2)
 led = machine.Pin("LED", machine.Pin.OUT)
+MAX_RETRIES=3
 
 class mqttClient:
   def __init__(self):
     client = self.__connectMQTT()
     self.client = client
     self.topic = config.ENV["MQTT_TOPIC"]
+    self.isConnected = False
   
-  def __connectMQTT(self):
+  def __connectMQTT(self, counter=1):
     client = MQTTClient(client_id=b"picow_thermo",
       server = config.ENV["MQTT_SERVER"],
       port = 1883,
@@ -30,10 +32,18 @@ class mqttClient:
       led.value(False)
       sleep(1)
       led.value(True)
+      counter += 1
       print("failed to connect to mqtt server")
-      return self.__connectMQTT() #retry
+      if counter != MAX_RETRIES:
+        return self.__connectMQTT() #retry
+
+      led.value(False)
+      print("max mqtt retries reached.. backing off")
+      return
+      
     else:
       led.value(False)
+      self.isConnected = True
       print("connected to mqtt server")
       return client
   
@@ -52,7 +62,7 @@ class wifi:
   def __init__(self):
     self.wlan = self.__connectWifi()
     
-  def __connectWifi(self):
+  def __connectWifi(self, counter=1):
     print('Connecting to WiFi Network Name:', config.ENV["SSID"])
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True) # power up the WiFi chip
@@ -66,14 +76,19 @@ class wifi:
       print('Success! We have connected to your access point!')
       print('Try to ping the device at', wlan.ifconfig()[0])
       led.value(False)
-      return wlan
+      return 
+    elif MAX_RETRIES == counter:
+      led.value(False)
+      print("reached max retries for wifi.. backing off")
+      return
     else:
       print('Failure! We have not connected to your access point!  Check your config file for errors.')
       led.value(False)
       sleep(1)
       led.value(True)
+      counter += 1
       print("reconnecting")
-      return self.__connectWifi() #retry
+      return self.__connectWifi(counter) #retry
   
   def disconnect(self):
     print('disconnecting from wifi')
@@ -99,15 +114,17 @@ def main():
   while True:
     led.value(True) # LED will be on until wifi is connected successfully
     wconn = wifi()
-    sleep(2)
-    led.value(True) # LED will remain on until mqtt is connected successfully
-    cMQTT = mqttClient()
-    temp, humidity = getReading(i2c)
-    cMQTT.publish(temp, humidity)
-    sleep(2)
-    print("entering power saver mode..")
-    cMQTT.disconnect()
-    wconn.disconnect()
+    if wconn.wlan.isconnected():
+      sleep(2)
+      led.value(True) # LED will remain on until mqtt is connected successfully
+      cMQTT = mqttClient()
+      if cMQTT.isConnected:
+        temp, humidity = getReading(i2c)
+        cMQTT.publish(temp, humidity)
+        sleep(2)
+        print("entering power saver mode..")
+        cMQTT.disconnect()
+        wconn.disconnect()
     sleep(1800)
 
 
