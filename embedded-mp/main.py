@@ -77,11 +77,7 @@ class wifi:
       print('Try to ping the device at', wlan.ifconfig()[0])
       led.value(False)
       return 
-    elif MAX_RETRIES == counter:
-      led.value(False)
-      print("reached max retries for wifi.. backing off")
-      return
-    else:
+    elif MAX_RETRIES != counter:
       print('Failure! We have not connected to your access point!  Check your config file for errors.')
       led.value(False)
       sleep(1)
@@ -89,6 +85,10 @@ class wifi:
       counter += 1
       print("reconnecting")
       return self.__connectWifi(counter) #retry
+    else:
+      led.value(False)
+      print("reached max retries for wifi.. backing off")
+      return
   
   def disconnect(self):
     print('disconnecting from wifi')
