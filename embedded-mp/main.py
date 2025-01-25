@@ -32,9 +32,9 @@ class mqttClient:
       led.value(False)
       sleep(1)
       led.value(True)
-      counter += 1
       print("failed to connect to mqtt server")
       if counter != MAX_RETRIES:
+        counter += 1
         sleep(2)
         return self.__connectMQTT(counter) #retry
 
