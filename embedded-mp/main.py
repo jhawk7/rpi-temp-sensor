@@ -11,10 +11,10 @@ MAX_RETRIES=3
 
 class mqttClient:
   def __init__(self):
+    self.isConnected = False
     client = self.__connectMQTT()
     self.client = client
     self.topic = config.ENV["MQTT_TOPIC"]
-    self.isConnected = False
   
   def __connectMQTT(self, counter=1):
     client = MQTTClient(client_id=b"picow_thermo",
@@ -35,11 +35,12 @@ class mqttClient:
       counter += 1
       print("failed to connect to mqtt server")
       if counter != MAX_RETRIES:
-        return self.__connectMQTT() #retry
+        sleep(2)
+        return self.__connectMQTT(counter) #retry
 
       led.value(False)
       print("max mqtt retries reached.. backing off")
-      return
+      return client
       
     else:
       led.value(False)
@@ -54,6 +55,7 @@ class mqttClient:
     print(f"published values to topic {self.topic}")
   
   def disconnect(self):
+    self.isConnected = False
     print('disconnecting from mqtt server')
     self.client.disconnect()
     
@@ -76,7 +78,7 @@ class wifi:
       print('Success! We have connected to your access point!')
       print('Try to ping the device at', wlan.ifconfig()[0])
       led.value(False)
-      return 
+      return wlan
     elif MAX_RETRIES != counter:
       print('Failure! We have not connected to your access point!  Check your config file for errors.')
       led.value(False)
@@ -88,7 +90,7 @@ class wifi:
     else:
       led.value(False)
       print("reached max retries for wifi.. backing off")
-      return
+      return wlan
   
   def disconnect(self):
     print('disconnecting from wifi')
@@ -122,12 +124,12 @@ def main():
         temp, humidity = getReading(i2c)
         cMQTT.publish(temp, humidity)
         sleep(2)
-        print("entering power saver mode..")
         cMQTT.disconnect()
         wconn.disconnect()
+    
+    print("entering power saver mode..")
     sleep(1800)
 
 
 if __name__ == "__main__":
   main()
-
