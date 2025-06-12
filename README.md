@@ -1,6 +1,10 @@
 # RPI Temperature and Humidity Sensor 
 ![Raspberry Pi](https://img.shields.io/badge/-Raspberry_Pi-C51A4A?style=flat&logo=Raspberry-Pi) ![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=flat&logo=go&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54) ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat&logo=Prometheus&logoColor=white) ![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=flat&logo=grafana&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white) ![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-FFFFFF?&style=flat&logo=opentelemetry&logoColor=black)
 
+![Screenshot 2025-06-12 at 13-35-37 Pi-Thermo (Crawl Space) - Dashboards - Grafana](https://github.com/user-attachments/assets/7f491919-28d1-481e-a25f-7fc5a070674d)
+<img src="https://github.com/user-attachments/assets/58045242-33ae-48c9-8fa0-e59d38f3b733" width="400"/>
+
+
 ### Running on Pi Zero (pi-zero-go)
 
 * Uses an [SHT31-D i2c device](https://www.adafruit.com/product/2857?srsltid=AfmBOoo7lEKOvPWaVatMKvZGXeTqnKE-TkIL2cTMc3QbUb8nyVwLrKQq) (temperature and humidity sensor) on raspberry pi (zero or better) to read temperature and humidity and send telemetry metrics to an opentelenetry collector (running on server with prometheus) to be displayed as graph via grafana + prometheus.
