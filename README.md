@@ -1,14 +1,14 @@
 # RPI Temperature and Humidity Sensor 
-![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=flat&logo=go&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54) ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat&logo=Prometheus&logoColor=white) ![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=flat&logo=grafana&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
+![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=flat&logo=go&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54) ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat&logo=Prometheus&logoColor=white) ![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=flat&logo=grafana&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white) ![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-FFFFFF?&style=flat&logo=opentelemetry&logoColor=black)
 
-### Running on Pi Zero
+### Running on Pi Zero (pizero-go)
 
-* Uses SHT31-D i2c device (temperature and humidity sensor) on raspberry pi (zero or better) to read temperature and humidity, and opentelemetry to send telemetry metrics to a collector (running on separate machine with prometheus backend) to be displayed as graph via grafana + prometheus.
+* Uses SHT31-D i2c device (temperature and humidity sensor) on raspberry pi (zero or better) to read temperature and humidity and send telemetry metrics to an opentelenetry collector (running on server with prometheus) to be displayed as graph via grafana + prometheus.
 
-### Running on Pico
+### Running on Pico (picow-mp)
 
-* Refactored for raspberry pi pico to read temperature and humidity, then publish reads to an MQTT server (running independently) for subscribers (such as prometheus, which can use grafana to graph the reads). This project uses micro-python (embedded-mp) for embedded devices (picow).
-**TinyGO (embedded-go) does not yet support the wifi chip on the picow**
+* Refactored for raspberry pi pico to read temperature and humidity, then publish reads to an MQTT server (running independently) for subscribers (such as prometheus). Using grafana to visualize the data. This project uses micro-python for embedded devices (picow).
+**TinyGO does not yet support the wifi chip on the picow**
 
 ## Flow
 #### Connect to i2c device
