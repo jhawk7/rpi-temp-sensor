@@ -5,16 +5,14 @@ import json
 from mqtt.simple import MQTTClient, MQTTException
 from time import sleep
 
-sleep(2)
 led = machine.Pin("LED", machine.Pin.OUT)
-MAX_RETRIES=3
+MAX_RETRIES = 3
 
 class mqttClient:
   def __init__(self):
     self.isConnected = False
-    client = self.__connectMQTT()
-    self.client = client
     self.topic = config.ENV["MQTT_TOPIC"]
+    self.client = self.__connectMQTT()
   
   def __connectMQTT(self, counter=1):
     client = MQTTClient(client_id=b"picow_thermo",
@@ -33,12 +31,14 @@ class mqttClient:
       sleep(1)
       led.value(True)
       print("failed to connect to mqtt server")
-      if counter != MAX_RETRIES:
+      if counter <= self.MAX_RETRIES:
         counter += 1
-        sleep(2)
+        sleep(1)
         return self.__connectMQTT(counter) #retry
 
       led.value(False)
+      sleep(0.5)
+      doubleBlink()
       print("max mqtt retries reached.. backing off")
       return client
       
@@ -79,7 +79,7 @@ class wifi:
       print('Try to ping the device at', wlan.ifconfig()[0])
       led.value(False)
       return wlan
-    elif MAX_RETRIES != counter:
+    elif counter <= MAX_RETRIES:
       print('Failure! We have not connected to your access point!  Check your config file for errors.')
       led.value(False)
       sleep(1)
@@ -89,6 +89,8 @@ class wifi:
       return self.__connectWifi(counter) #retry
     else:
       led.value(False)
+      sleep(0.5)
+      doubleBlink()
       print("reached max retries for wifi.. backing off")
       return wlan
   
@@ -97,6 +99,14 @@ class wifi:
     self.wlan.disconnect()
     self.wlan.active(False) #power down wlan chip
 
+def doubleBlink():
+  led.value(True)
+  sleep(0.5)
+  led.value(False)
+  sleep(0.5)
+  led.value(True)
+  sleep(0.5)
+  led.value(False)
 
 def getReading(i2c):
   i2c.writeto(0x44, bytes([0x2C, 0x06]))
