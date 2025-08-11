@@ -27,13 +27,14 @@ class mqttClient:
     )
     
     try:
+      print("Connecting to MQTT Server:", config.ENV["MQTT_SERVER"])
       client.connect()
-    except MQTTException:
+    except Exception as e:
       LED.value(False)
       sleep(1)
       LED.value(True)
-      print("failed to connect to mqtt server")
-      if counter <= self.MAX_RETRIES:
+      print("failed to connect to mqtt server:", e)
+      if counter < MAX_RETRIES:
         counter += 1
         sleep(1)
         return self.__connectMQTT(counter) #retry
@@ -81,7 +82,7 @@ class wifi:
       print('Try to ping the device at', wlan.ifconfig()[0])
       LED.value(False)
       return wlan
-    elif counter <= MAX_RETRIES:
+    elif counter < MAX_RETRIES:
       print('Failure! We have not connected to your access point!  Check your config file for errors.')
       LED.value(False)
       sleep(1)
