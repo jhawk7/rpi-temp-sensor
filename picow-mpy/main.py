@@ -5,6 +5,8 @@ import json
 from mqtt.simple import MQTTClient, MQTTException
 from time import sleep
 
+sleep(2)  # wait for the system to stabilize
+print("Starting PicoW Temp Sensor...")
 LED = machine.Pin("LED", machine.Pin.OUT)
 MAX_RETRIES = 3
 
