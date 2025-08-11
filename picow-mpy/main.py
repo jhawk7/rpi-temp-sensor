@@ -5,7 +5,7 @@ import json
 from mqtt.simple import MQTTClient, MQTTException
 from time import sleep
 
-led = machine.Pin("LED", machine.Pin.OUT)
+LED = machine.Pin("LED", machine.Pin.OUT)
 MAX_RETRIES = 3
 
 class mqttClient:
@@ -27,23 +27,23 @@ class mqttClient:
     try:
       client.connect()
     except MQTTException:
-      led.value(False)
+      LED.value(False)
       sleep(1)
-      led.value(True)
+      LED.value(True)
       print("failed to connect to mqtt server")
       if counter <= self.MAX_RETRIES:
         counter += 1
         sleep(1)
         return self.__connectMQTT(counter) #retry
 
-      led.value(False)
+      LED.value(False)
       sleep(0.5)
       doubleBlink()
       print("max mqtt retries reached.. backing off")
       return client
       
     else:
-      led.value(False)
+      LED.value(False)
       self.isConnected = True
       print("connected to mqtt server")
       return client
@@ -77,18 +77,18 @@ class wifi:
     if wlan.isconnected():
       print('Success! We have connected to your access point!')
       print('Try to ping the device at', wlan.ifconfig()[0])
-      led.value(False)
+      LED.value(False)
       return wlan
     elif counter <= MAX_RETRIES:
       print('Failure! We have not connected to your access point!  Check your config file for errors.')
-      led.value(False)
+      LED.value(False)
       sleep(1)
-      led.value(True)
+      LED.value(True)
       counter += 1
       print("reconnecting")
       return self.__connectWifi(counter) #retry
     else:
-      led.value(False)
+      LED.value(False)
       sleep(0.5)
       doubleBlink()
       print("reached max retries for wifi.. backing off")
@@ -100,13 +100,13 @@ class wifi:
     self.wlan.active(False) #power down wlan chip
 
 def doubleBlink():
-  led.value(True)
+  LED.value(True)
   sleep(0.5)
-  led.value(False)
+  LED.value(False)
   sleep(0.5)
-  led.value(True)
+  LED.value(True)
   sleep(0.5)
-  led.value(False)
+  LED.value(False)
 
 def getReading(i2c):
   i2c.writeto(0x44, bytes([0x2C, 0x06]))
@@ -124,11 +124,11 @@ def main():
   print(i2c.scan())
   
   while True:
-    led.value(True) # LED will be on until wifi is connected successfully
+    LED.value(True) # LED will be on until wifi is connected successfully
     wconn = wifi()
     if wconn.wlan.isconnected():
       sleep(2)
-      led.value(True) # LED will remain on until mqtt is connected successfully
+      LED.value(True) # LED will remain on until mqtt is connected successfully
       cMQTT = mqttClient()
       if cMQTT.isConnected:
         temp, humidity = getReading(i2c)
