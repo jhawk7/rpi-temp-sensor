@@ -39,12 +39,16 @@ double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
 * a healthcheck endpoint is setup on `port 8080` using gin to remotely verify that everything is running smoothly
 * `curl http://<device_ip>:8080/healthcheck`
 
-## Dockerization **(Pi Zero Only)**
+## Dockerization **(Pi Zero Only - NOT recommended due to resource constraints)**
 * the dockerfile builds the go binary in the build stage (GOOS set to linux and GOARCH set to arm for raspberry pi zero w), and executes the binary in the 2nd stage
 * port 8080 is exposed in the image for the healthcheck endpoint
 * the i2c device entry folder (SHT31-D) is mounted in the container using the `device` flag in the docker-compose file
 * with dockerization, we are able to make changes to the code on our local device, build and update the image, then pull the new image down to the raspberry pi from docker hub
 * the application can now be started via docker from a cron job or service in linux
+
+## Systemd Service/Daemon **(Pi Zero Only - recommended due to memory constraints)
+* use `go build` to create a binary and use the `pi-zero-go/service.txt` file to create a linux service in systemd with the appropriate env vars and path to the binary
+* this consumes far less resources than running in a docker container
 
 ## Helpful Links Used
 * Opentelemetry gauge documentation - (https://opentelemetry.io/docs/reference/specification/metrics/api/#asynchronous-gauge)

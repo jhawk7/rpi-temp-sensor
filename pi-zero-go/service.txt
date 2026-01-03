@@ -1,0 +1,13 @@
+[Service]
+ExecStart=<path to binary>
+Restart=on-failure
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=rpi-temp-sensor
+User=pi
+Group=pi
+Environment="OTEL_EXPORTER_OTLP_ENDPOINT=x.x.x.x:4317"
+Environment="environment=development"
+Environment="SERVICE_NAME=rpi-thermometer"
+[Install]
+WantedBy=multi-user.target
