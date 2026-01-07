@@ -6,6 +6,7 @@
 
 
 ### Running on Pi Zero (pi-zero-go)
+**make sure that i2c interface is enabled through raspi-config**
 
 * Uses an [SHT31-D i2c device](https://www.adafruit.com/product/2857?srsltid=AfmBOoo7lEKOvPWaVatMKvZGXeTqnKE-TkIL2cTMc3QbUb8nyVwLrKQq) (temperature and humidity sensor) on raspberry pi (zero or better) to read temperature and humidity and send telemetry metrics to an opentelenetry collector (running on server with prometheus) to be displayed as graph via grafana + prometheus.
 
