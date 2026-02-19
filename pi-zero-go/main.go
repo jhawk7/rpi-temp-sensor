@@ -46,10 +46,10 @@ func main() {
 func readTemperature(mqttClient *mqttc.MQTTClient) {
 	for {
 		// read temp and humidity from i2c device every 5 minutes
-		time.Sleep(300 * time.Second)
 		temp, humidity := getReading()
 		// push to mqtt broker
 		mqttClient.Publish(temp, humidity)
+		time.Sleep(300 * time.Second)
 	}
 }
 
