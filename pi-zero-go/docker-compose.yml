@@ -6,9 +6,11 @@ services:
       - "8080:8080"
     restart: always
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT="x.x.x.x:4317"
-      - environment="development"
-      - SERVICE_NAME="rpi-thermometer"
+      - MQTT_SERVER="mqtt-broker"
+      - MQTT_PORT="1883"
+      - MQTT_USER="mqtt_user"
+      - MQTT_PASS="mqtt_pass"
+      - MQTT_TOPIC="topic"
     devices:
       #mount i2c bus from pi for temp device
       - "/dev/i2c-1:/dev/i2c-1"
