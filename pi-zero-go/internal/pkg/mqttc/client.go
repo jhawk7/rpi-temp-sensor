@@ -38,7 +38,7 @@ func InitMQTTClient(config common.Config) *MQTTClient {
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		err := fmt.Errorf("mqtt connection failed; %v", token.Error())
-		panic(err)
+		common.ErrorHandler(err, true)
 	}
 
 	return &MQTTClient{
