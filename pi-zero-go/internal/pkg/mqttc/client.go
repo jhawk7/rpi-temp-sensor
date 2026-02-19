@@ -49,8 +49,8 @@ func InitMQTTClient(config common.Config) *MQTTClient {
 
 func (c *MQTTClient) Publish(temp float64, humidity float64) {
 	datamap := map[string]interface{}{
-		"tempF":    fmt.Sprintf("%.2f", temp),
-		"humidity": fmt.Sprintf("%.2f", humidity),
+		"tempF":    temp,
+		"humidity": humidity,
 		"action":   "log",
 	}
 
