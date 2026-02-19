@@ -60,7 +60,7 @@ func (c *MQTTClient) Publish(temp float64, humidity float64) {
 		common.ErrorHandler(e, false)
 		return
 	}
-	token := (*c.conn).Publish(c.topic, 1, true, string(jsonBytes))
+	token := (*c.conn).Publish(c.topic, 1, false, string(jsonBytes))
 	token.Wait()
 }
 
