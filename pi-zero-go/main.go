@@ -1,32 +1,20 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	i2c "github.com/d2r2/go-i2c"
 	"github.com/gin-gonic/gin"
-	"github.com/jhawk7/go-opentel/opentel"
-	"github.com/jhawk7/rpi-thermometer/pkg/common"
+	"github.com/jhawk7/rpi-thermometer/internal/pkg/common"
+	"github.com/jhawk7/rpi-thermometer/internal/pkg/mqttc"
 	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 )
 
 var i2cConn *i2c.I2C
 
 func main() {
-	// initialize meter and trace proivders
-	if opentelErr := opentel.InitOpentelProviders(); opentelErr != nil {
-		common.ErrorHandler(fmt.Errorf("failed to initialize opentel providers; %v\n", opentelErr), true)
-	}
-
-	defer func() {
-		if shutdownErr := opentel.ShutdownOpentelProviders(); shutdownErr != nil {
-			common.ErrorHandler(fmt.Errorf("failed to stop opentel providers; %v\n", shutdownErr), false)
-		}
-	}()
+	config := common.LoadConfig()
 
 	/*
 	* Create new connection to I2C bus on line 1 with address 0x44 (default SHT31-D address location)
@@ -40,7 +28,11 @@ func main() {
 	defer conn.Close()
 	i2cConn = conn
 
-	go readTemperature()
+	// connect to mqtt broker and subscribe to topic for remote temp read requests
+	mqttClient := mqttc.InitMQTTClient(config)
+	defer mqttClient.Disconnect()
+
+	go readTemperature(mqttClient)
 
 	r := gin.New()
 	r.GET("/healthcheck", func(c *gin.Context) {
@@ -51,21 +43,14 @@ func main() {
 	r.Run() // listen and serve on 0.0.0.0:8080 */
 }
 
-func readTemperature() {
-	// creates meter and gauge observer from opentel meter provider
-	thermometer := opentel.GetMeterProvider().Meter("rpi-thermometer")
-	// gauge observer continuously polls data from callback
-	_, gaugeErr := thermometer.NewFloat64GaugeObserver("rpi-thermometer.read", temperatureCallback)
-	if gaugeErr != nil {
-		common.ErrorHandler(fmt.Errorf("failed to create temp logger; %v\n", gaugeErr), true)
+func readTemperature(mqttClient *mqttc.MQTTClient) {
+	for {
+		// read temp and humidity from i2c device every 5 minutes
+		time.Sleep(300 * time.Second)
+		temp, humidity := getReading()
+		// push to mqtt broker
+		mqttClient.Publish(temp, humidity)
 	}
-}
-
-var temperatureCallback = func(ctx context.Context, result metric.Float64ObserverResult) {
-	temp, humidity := getReading()
-	result.Observe(temp, attribute.String("read.type", "temperature (F)"))
-	result.Observe(humidity, attribute.String("read.type", "humidity (RH)"))
-	time.Sleep(5 * time.Second)
 }
 
 func getReading() (float64, float64) {

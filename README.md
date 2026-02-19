@@ -8,7 +8,7 @@
 ### Running on Pi Zero (pi-zero-go)
 **make sure that i2c interface is enabled through raspi-config**
 
-* Uses an [SHT31-D i2c device](https://www.adafruit.com/product/2857?srsltid=AfmBOoo7lEKOvPWaVatMKvZGXeTqnKE-TkIL2cTMc3QbUb8nyVwLrKQq) (temperature and humidity sensor) on raspberry pi (zero or better) to read temperature and humidity and send telemetry metrics to an opentelenetry collector (running on server with prometheus) to be displayed as graph via grafana + prometheus.
+* Uses an [SHT31-D i2c device](https://www.adafruit.com/product/2857?srsltid=AfmBOoo7lEKOvPWaVatMKvZGXeTqnKE-TkIL2cTMc3QbUb8nyVwLrKQq) (temperature and humidity sensor) on raspberry pi (zero or better) to read temperature and humidity and send metrics to ~~an opentelenetry collector~~ an mqtt broker (running on server with prometheus) to be visualized via grafana.
 
 ### Running on Pico (picow-mpy)
 
@@ -22,10 +22,10 @@
 * run `i2cdetect -y 1` to view vtable for specific device addr
 * when loaded, a specific device entry folder /dev/i2c-* will be created; using bus 1 for /dev/i2c-1
 
-#### Setup Opentelemetry Gauge Observer via MeterProvider **(Pi Zero Only)**
-* (see opentelemetry gauge documentation)
-* the gauge observer will continously trigger the registered callback function and observe/record the results
-* the callback function, in this case, runs "getReading()" to get the temperature and humidity readings and make them observable
+~~#### Setup Opentelemetry Gauge Observer via MeterProvider **(Pi Zero Only)**~~ **DEPRECATED, NOW USING MQTT**
+* ~~(see opentelemetry gauge documentation)~~
+* ~~the gauge observer will continously trigger the registered callback function and observe/record the results~~
+* ~~the callback function, in this case, runs "getReading()" to get the temperature and humidity readings and make them observable~~
 
 #### Send command to read temp and humidity and convert response bytes to readable data
 * send repeatable measurement command to i2c device to begin reading temp and humidity (command - (0x2C, 0x06) given lsb addressing)
@@ -61,3 +61,4 @@ double humidity = (((data[3] * 256) + data[4])) * 100.0 / 65535.0;
 * TinyGo working with i2c - (https://tinygo.org/docs/concepts/peripherals/i2c/)
 * MicroPython for the pico - (https://docs.micropython.org/en/latest/rp2/quickref.html)
 * Connecting pico to mqtt with micropython - (https://www.instructables.com/Connecting-Raspberry-Pi-Pico-Ws-With-MQTT/)
+* https://github.com/eclipse-paho/paho.mqtt.golang
