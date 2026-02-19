@@ -28,7 +28,7 @@ type MQTTClient struct {
 func InitMQTTClient(config common.Config) *MQTTClient {
 	//set client options
 	opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%v:%v", config.MQTTServer, config.MQTTPort))
-	//opts.SetClientID(os.Getenv("MQTT_CLIENT_ID"))
+	opts.SetClientID("rpi-thermo")
 	opts.SetPassword(config.MQTTPass)
 	opts.SetUsername(config.MQTTUser)
 	opts.SetDefaultPublishHandler(pubHandler)
