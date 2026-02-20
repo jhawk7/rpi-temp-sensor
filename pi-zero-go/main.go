@@ -49,7 +49,7 @@ func readTemperature(mqttClient *mqttc.MQTTClient) {
 		temp, humidity := getReading()
 		// push to mqtt broker
 		mqttClient.Publish(temp, humidity)
-		time.Sleep(300 * time.Second)
+		time.Sleep(600 * time.Second)
 	}
 }
 
